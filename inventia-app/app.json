@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "Inventia",
+    "slug": "inventia-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": { "resizeMode": "contain", "backgroundColor": "#FFFFFF" },
+    "assetBundlePatterns": ["**/*"],
+    "ios": { "supportsTablet": false, "bundleIdentifier": "com.inventia.app" },
+    "android": { "adaptiveIcon": { "backgroundColor": "#FFFFFF" }, "package": "com.inventia.app" }
+  }
+}
