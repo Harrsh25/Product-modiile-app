@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventia — Live Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F5F9;--surface:#fff;--surf2:#F8F9FC;
+  --pri:#4A6CF7;--priL:#EEF1FE;--priD:#3355E0;
+  --sec:#8B5CF6;--secL:#FAF5FF;
+  --ok:#22C55E;--okL:#F0FDF4;--okD:#16A34A;
+  --warn:#F59E0B;--warnL:#FFFBEB;
+  --err:#EF4444;--errL:#FEF2F2;
+  --t1:#111827;--t2:#6B7280;--t3:#9CA3AF;
+  --bd:#E5E7EB;--bdL:#F3F4F6;
+  --sh:rgba(0,0,0,.08);
+}
+body{
+  font-family:'Inter',sans-serif;
+  background:linear-gradient(135deg,#4A6CF7 0%,#8B5CF6 50%,#EC4899 100%);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  padding:32px 16px 48px;gap:20px;
+}
+.pg-title{color:#fff;font-size:26px;font-weight:900;text-shadow:0 2px 8px rgba(0,0,0,.25);text-align:center}
+.pg-sub{color:rgba(255,255,255,.78);font-size:13px;text-align:center;margin-top:4px}
+
+/* ── Phone Frame ── */
+.phone{
+  width:375px;height:780px;border-radius:44px;
+  border:10px solid #1C1C1E;
+  box-shadow:0 0 0 1px #333,0 40px 100px rgba(0,0,0,.55),inset 0 0 0 1px #3a3a3c;
+  position:relative;overflow:hidden;display:flex;flex-direction:column;
+  background:var(--bg);
+}
+.dynamic-island{
+  position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  width:110px;height:28px;background:#1C1C1E;border-radius:20px;z-index:200;
+}
+.status-bar{
+  height:48px;background:var(--surface);display:flex;align-items:flex-end;
+  justify-content:space-between;padding:0 20px 8px;flex-shrink:0;
+  border-bottom:1px solid var(--bd);z-index:10;position:relative;
+}
+.st-time{font-size:13px;font-weight:800;color:var(--t1)}
+.st-icons{font-size:11px;color:var(--t2);display:flex;align-items:center;gap:5px}
+
+/* ── Screens ── */
+.screens{flex:1;position:relative;overflow:hidden}
+.screen{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;
+  background:var(--bg);display:none;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+}
+.screen::-webkit-scrollbar{display:none}
+.screen.active{display:block}
+
+/* ── Bottom Nav ── */
+.bnav{
+  height:68px;background:var(--surface);border-top:1px solid var(--bd);
+  display:flex;align-items:center;padding:0 4px 6px;flex-shrink:0;
+  box-shadow:0 -2px 10px rgba(0,0,0,.06);
+}
+.ni{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;cursor:pointer;padding:4px;border-radius:12px;
+  border:none;background:transparent;position:relative;-webkit-tap-highlight-color:transparent;
+  font-family:'Inter',sans-serif;
+}
+.ni:active{background:var(--priL)}
+.ni-icon{font-size:20px;line-height:1}
+.ni-label{font-size:10px;font-weight:600;color:var(--t3)}
+.ni.active .ni-label{color:var(--pri)}
+.ni-badge{
+  position:absolute;top:2px;right:18%;background:var(--err);color:#fff;
+  font-size:9px;font-weight:800;min-width:15px;height:15px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;border:2px solid #fff;padding:0 2px;
+}
+
+/* ── Shared ── */
+.card{background:var(--surface);border-radius:14px;border:1px solid var(--bd);box-shadow:0 2px 8px var(--sh)}
+.section-title{font-size:14px;font-weight:800;color:var(--t1);margin-bottom:8px}
+.view-all{font-size:12px;color:var(--pri);font-weight:600;cursor:pointer}
+.rh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.badge-pill{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;
+}
+.bdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.type-pill{display:inline-flex;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;margin-bottom:3px}
+.scontent{padding:12px 14px;display:flex;flex-direction:column;gap:11px}
+
+/* ────────────── DASHBOARD ────────────── */
+.dash-hdr{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding:12px 16px 10px;background:var(--surface);border-bottom:1px solid var(--bd);
+}
+.logo-txt{font-size:20px;font-weight:900;color:var(--t1)}
+.role-txt{font-size:11px;color:var(--t3);font-weight:500;margin-top:2px}
+.hdr-actions{display:flex;align-items:center;gap:8px}
+.icon-btn{
+  width:36px;height:36px;border-radius:10px;background:var(--surf2);
+  border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:16px;position:relative;
+}
+.notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--err);border:1.5px solid #fff}
+.av-circ{
+  width:36px;height:36px;border-radius:50%;background:var(--pri);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:13px;font-weight:800;cursor:pointer;
+}
+
+/* punch card */
+.punch-card{padding:0;overflow:hidden}
+.punch-srow{display:flex;justify-content:space-between;align-items:center;padding:10px 14px 0}
+.status-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;
+}
+.loc-row{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--t3)}
+.times-row{display:flex;padding:8px 14px;gap:12px}
+.time-col{flex:1}
+.time-lbl{font-size:9px;color:var(--t3);font-weight:700;letter-spacing:.5px;margin-bottom:3px}
+.time-val{font-size:24px;font-weight:900;color:var(--t1);letter-spacing:2px}
+.time-div{width:1px;background:var(--bd);margin:4px 0}
+.tl-link{padding:0 14px 8px;font-size:12px;color:var(--pri);font-weight:600;cursor:pointer}
+.punch-btns{display:flex;gap:10px;padding:8px 14px 14px}
+.btn-punch{
+  flex:1;padding:12px;border-radius:10px;border:none;background:var(--ok);
+  color:#fff;font-size:14px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-family:'Inter',sans-serif;transition:all .2s;
+}
+.btn-punch:active{opacity:.85;transform:scale(.98)}
+.btn-punch.out{background:var(--err)}
+.btn-qr{
+  flex:1;padding:12px;border-radius:10px;border:1px solid var(--bd);
+  background:var(--surface);color:var(--t2);font-size:14px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Inter',sans-serif;
+}
+
+/* quick actions */
+.qa-row{display:flex;justify-content:space-around;background:var(--surface);border-radius:14px;border:1px solid var(--bd);padding:14px 4px}
+.qa-item{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;flex:1}
+.qa-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;position:relative}
+.qa-badge{
+  position:absolute;top:-4px;right:-4px;background:var(--err);color:#fff;
+  font-size:9px;font-weight:800;width:17px;height:17px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;border:2px solid #fff;
+}
+.qa-lbl{font-size:10px;color:var(--t2);font-weight:600;text-align:center}
+
+/* two col */
+.two-col{display:flex;gap:10px}
+.half-card{flex:1;padding:12px}
+.leave-row{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.leave-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.leave-info{flex:1}
+.leave-type{font-size:10px;color:var(--t2);margin-bottom:2px;font-weight:600}
+.bar-track{height:4px;background:var(--bd);border-radius:2px}
+.bar-fill{height:4px;border-radius:2px}
+.leave-cnt{font-size:10px;color:var(--t3);font-weight:600;flex-shrink:0}
+.event-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.ev-icon{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.ev-title{font-size:11px;font-weight:700;color:var(--t1)}
+.ev-time{font-size:10px;color:var(--t3);margin-top:1px}
+
+/* view toggle */
+.view-toggle{display:flex;background:var(--surface);border-radius:10px;border:1px solid var(--bd);overflow:hidden}
+.view-tab{
+  flex:1;padding:10px;text-align:center;font-size:13px;font-weight:600;color:var(--t3);
+  cursor:pointer;border:none;background:transparent;font-family:'Inter',sans-serif;transition:all .2s;
+}
+.view-tab.active{background:var(--pri);color:#fff}
+
+/* summary */
+.sum-row{display:flex;justify-content:space-around}
+.sum-item{text-align:center}
+.sum-val{font-size:26px;font-weight:900}
+.sum-chg{font-size:9px;color:var(--t3);margin-top:1px}
+.sum-lbl{font-size:11px;color:var(--t2);font-weight:600;margin-top:1px}
+
+/* focus */
+.focus-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.focus-item{background:var(--surf2);border-radius:10px;padding:10px}
+.focus-hdr{display:flex;align-items:center;gap:5px;margin-bottom:6px}
+.focus-icon{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px}
+.focus-ttl{font-size:10px;color:var(--t2);font-weight:600}
+.focus-val{font-size:22px;font-weight:900;margin-bottom:3px}
+.focus-lbl{font-size:10px;color:var(--t3);line-height:1.3}
+.stars{color:var(--warn);font-size:10px}
+
+/* productivity */
+.prod-stats{display:flex;justify-content:space-around;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--bd)}
+.ps-lbl{font-size:8px;color:var(--t3);font-weight:700;letter-spacing:.5px;margin-bottom:2px}
+.ps-val{font-size:18px;font-weight:900;color:var(--t1)}
+.perf-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.perf-day{width:24px;font-size:11px;color:var(--t2);font-weight:600}
+.perf-track{flex:1;height:6px;background:var(--bd);border-radius:3px}
+.perf-fill{height:6px;border-radius:3px}
+.perf-score{width:20px;font-size:10px;color:var(--t3);text-align:right}
+
+/* priority */
+.priority-row{display:flex;align-items:center;gap:14px}
+.pri-legend{flex:1}
+.pri-item{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.pri-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.pri-lbl{flex:1;font-size:11px;color:var(--t2)}
+.pri-pct{font-size:11px;color:var(--t3);font-weight:600}
+
+/* approvals */
+.ap-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdL)}
+.ap-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800;flex-shrink:0}
+.ap-info{flex:1}
+.ap-name{font-size:12px;font-weight:700;color:var(--t1)}
+.ap-det{font-size:10px;color:var(--t3);margin-top:1px}
+.ap-btn{padding:4px 9px;border-radius:6px;border:1px solid;font-size:10px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
+
+/* announcements */
+.an-row{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--bdL)}
+.an-dot{width:7px;height:7px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.an-title{font-size:12px;font-weight:600;color:var(--t1);line-height:1.4}
+.an-tag{display:inline-flex;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;margin-top:3px;margin-bottom:2px}
+.an-date{font-size:10px;color:var(--t3);margin-top:1px}
+
+/* ────────────── ASSIGNMENTS ────────────── */
+.asgn-hdr{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--bd);
+}
+.asgn-hdr h2{font-size:17px;font-weight:800;color:var(--t1)}
+.proj-dd{
+  display:flex;align-items:center;gap:4px;padding:5px 10px;
+  background:var(--surf2);border:1px solid var(--bd);border-radius:8px;
+  font-size:12px;color:var(--t2);font-weight:600;cursor:pointer;
+}
+.toolbar{background:var(--surface);padding:8px 14px;display:flex;gap:6px}
+.view-btn{
+  display:flex;align-items:center;gap:4px;padding:6px 10px;
+  border:1px solid var(--bd);border-radius:8px;font-size:12px;font-weight:600;
+  color:var(--t3);background:transparent;cursor:pointer;font-family:'Inter',sans-serif;
+}
+.view-btn.active{border-color:var(--pri);background:var(--priL);color:var(--pri)}
+.search-row{
+  display:flex;gap:8px;padding:8px 14px;
+  background:var(--surface);border-bottom:1px solid var(--bd);
+}
+.search-box{
+  flex:1;display:flex;align-items:center;gap:8px;
+  background:var(--surf2);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;
+}
+.search-box input{border:none;background:transparent;font-family:'Inter',sans-serif;font-size:13px;color:var(--t1);flex:1;outline:none}
+.filter-btn{
+  display:flex;align-items:center;gap:4px;padding:8px 12px;
+  background:var(--surf2);border:1px solid var(--bd);border-radius:10px;
+  font-size:13px;font-weight:600;color:var(--t2);cursor:pointer;font-family:'Inter',sans-serif;
+}
+.col-hdr{
+  display:flex;justify-content:space-between;padding:7px 14px;
+  background:var(--surface);border-bottom:1px solid var(--bd);
+  font-size:9px;font-weight:700;color:var(--t3);letter-spacing:.5px;
+}
+.asgn-row{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--bdL);cursor:pointer;
+}
+.asgn-row:active{background:var(--surf2)}
+.al{flex:1;padding-right:10px}
+.ar{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.asgn-title{font-size:14px;font-weight:700;color:var(--t1);line-height:1.3}
+.asgn-parent{font-size:10px;color:var(--t3);margin-top:2px}
+.asgn-date{font-size:10px;color:var(--t3)}
+.stats-bar{
+  position:sticky;bottom:0;display:flex;justify-content:space-around;
+  padding:10px 14px;background:var(--surface);border-top:1px solid var(--bd);
+  box-shadow:0 -2px 8px rgba(0,0,0,.06);
+}
+.stitem{text-align:center}
+.stval{font-size:20px;font-weight:900}
+.stlbl{font-size:9px;color:var(--t3);font-weight:600}
+
+/* ────────────── ATTENDANCE ────────────── */
+.att-hdr{background:var(--surface);padding:12px 16px 0;border-bottom:1px solid var(--bd)}
+.att-title{font-size:18px;font-weight:800;color:var(--t1)}
+.att-sub{font-size:12px;color:var(--t3);margin-top:2px}
+.att-tabs{display:flex;margin-top:8px}
+.att-tab{
+  flex:1;padding:10px;text-align:center;font-size:14px;font-weight:600;color:var(--t3);
+  cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;
+}
+.att-tab.active{color:var(--pri);border-bottom-color:var(--pri)}
+.month-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 8px}
+.mnav-btn{
+  width:32px;height:32px;border-radius:8px;background:var(--surface);border:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;font-family:'Inter',sans-serif;
+}
+.month-ttl{font-size:15px;font-weight:800;color:var(--t1)}
+.cal-card{margin:0 14px;padding:12px}
+.cal-hdrs{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:8px}
+.cal-dh{text-align:center;font-size:9px;font-weight:700;color:var(--t3);letter-spacing:.3px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-cell{display:flex;flex-direction:column;align-items:center;padding:3px 0}
+.cal-day{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--t1)}
+.cal-day.today{background:var(--pri);color:#fff;font-weight:800}
+.cal-dot{width:4px;height:4px;border-radius:50%;margin-top:1px}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)}
+.leg-item{display:flex;align-items:center;gap:3px}
+.leg-dot{width:7px;height:7px;border-radius:50%}
+.leg-lbl{font-size:9px;color:var(--t3);font-weight:500}
+.sum-stat-row{display:flex;gap:6px;padding:10px 14px}
+.sum-stat-card{flex:1;background:var(--surface);border-radius:10px;border:1px solid var(--bd);padding:8px;text-align:center}
+.ssval{font-size:20px;font-weight:900}
+.sslbl{font-size:10px;color:var(--t2);font-weight:600;margin-top:1px}
+.sschg{font-size:8px;color:var(--t3);margin-top:1px}
+.hist-card{margin:0 14px 14px;overflow:hidden}
+.hist-hdr{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;cursor:pointer}
+.hist-ttl{font-size:14px;font-weight:800;color:var(--t1)}
+.hist-row{display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid var(--bdL);gap:8px}
+.hdate{width:60px}
+.hday{font-size:11px;font-weight:700;color:var(--t1)}
+.hmonth{font-size:10px;color:var(--t3);margin-top:1px}
+.htimes{flex:1}
+.htr{display:flex;gap:4px;align-items:center;margin-bottom:2px}
+.htlbl{font-size:9px;color:var(--t3);width:64px}
+.htval{font-size:11px;color:var(--t1);font-weight:600}
+.hstatus{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+
+/* ────────────── PROJECTS ────────────── */
+.proj-hdr{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--bd);
+}
+.proj-hdr h2{font-size:18px;font-weight:800;color:var(--t1)}
+.hbtns{display:flex;gap:8px}
+.srch-btn{
+  width:36px;height:36px;border-radius:10px;background:var(--surf2);
+  border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;
+}
+.add-btn{
+  width:36px;height:36px;border-radius:10px;background:var(--pri);
+  border:none;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:22px;color:#fff;font-weight:700;font-family:'Inter',sans-serif;line-height:1;
+}
+.filter-scroll{
+  display:flex;gap:6px;padding:8px 14px;
+  background:var(--surface);border-bottom:1px solid var(--bd);overflow-x:auto;scrollbar-width:none;
+}
+.filter-scroll::-webkit-scrollbar{display:none}
+.fchip{
+  padding:5px 14px;border-radius:20px;border:1px solid var(--bd);font-size:12px;
+  font-weight:600;color:var(--t2);cursor:pointer;white-space:nowrap;
+  font-family:'Inter',sans-serif;background:var(--surface);transition:all .2s;
+}
+.fchip.active{background:var(--pri);color:#fff;border-color:var(--pri)}
+.stats-row2{display:flex;background:var(--surface);padding:12px 14px;border-bottom:1px solid var(--bd)}
+.stat-bub{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.sb-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.sb-val{font-size:18px;font-weight:900}
+.sb-lbl{font-size:10px;color:var(--t3);font-weight:600}
+.proj-list{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.proj-card{padding:14px}
+.pc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.pc-ta{flex:1;display:flex;flex-direction:column;gap:4px}
+.pc-name{font-size:15px;font-weight:800;color:var(--t1)}
+.pc-info{display:flex;gap:12px;margin-bottom:10px}
+.pci{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--t3)}
+.pc-bot{display:flex;align-items:center;gap:10px}
+.av-grp{display:flex;align-items:center}
+.avsm{
+  width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:9px;font-weight:700;border:2px solid #fff;margin-left:-6px;
+}
+.avsm:first-child{margin-left:0}
+.pc-prog{flex:1}
+.pc-pct{font-size:12px;font-weight:700;color:var(--t2);margin-bottom:4px;text-align:right}
+.pc-track{height:6px;background:var(--bd);border-radius:3px}
+.pc-fill{height:6px;border-radius:3px}
+.show-more{
+  display:flex;align-items:center;gap:4px;margin-top:10px;padding-top:8px;
+  border-top:1px solid var(--bdL);font-size:12px;color:var(--pri);font-weight:600;cursor:pointer;
+}
+
+/* ────────────── MORE ────────────── */
+.more-content{padding:14px;display:flex;flex-direction:column;gap:12px}
+.prof-banner{display:flex;align-items:center;gap:12px;padding:14px}
+.pav{
+  width:52px;height:52px;border-radius:50%;background:var(--pri);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:800;flex-shrink:0;
+}
+.pname{font-size:16px;font-weight:800;color:var(--t1)}
+.prole{font-size:12px;color:var(--t3);margin-top:2px}
+.edit-btn{
+  width:34px;height:34px;border-radius:10px;background:var(--priL);
+  border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;
+}
+.mod-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  background:var(--surface);border-radius:14px;border:1px solid var(--bd);overflow:hidden;
+}
+.mod-item{
+  display:flex;flex-direction:column;align-items:center;padding:12px 4px;
+  cursor:pointer;border-bottom:1px solid var(--bdL);transition:background .15s;
+}
+.mod-item:active{background:var(--surf2)}
+.mod-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:5px}
+.mod-name{font-size:10px;color:var(--t2);font-weight:600;text-align:center}
+.cust-row{
+  display:flex;align-items:center;gap:8px;padding:14px;
+  background:var(--surface);border-radius:14px;border:1px solid var(--bd);cursor:pointer;
+}
+.cust-txt{font-size:14px;color:var(--pri);font-weight:700;flex:1}
+.set-row{
+  display:flex;align-items:center;gap:12px;
+  background:var(--surface);border-radius:12px;border:1px solid var(--bd);padding:13px;cursor:pointer;
+}
+.set-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.set-lbl{flex:1;font-size:14px;font-weight:600;color:var(--t1)}
+.set-arr{font-size:14px;color:var(--t3)}
+
+/* ────────────── MODULES MODAL ────────────── */
+.modal-ov{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;
+  display:none;align-items:flex-end;justify-content:center;
+}
+.modal-ov.show{display:flex}
+.modal-sheet{
+  background:var(--surface);border-radius:24px 24px 0 0;width:375px;
+  padding:0 16px 32px;max-height:85%;overflow-y:auto;
+  animation:slideUp .3s ease;
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sh-handle{width:40px;height:4px;background:var(--bd);border-radius:2px;margin:10px auto}
+.sh-hdr{display:flex;justify-content:space-between;align-items:center;padding:10px 0 14px}
+.sh-title{font-size:17px;font-weight:800;color:var(--t1)}
+.close-btn{font-size:18px;color:var(--t2);cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
+.modal-mod-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.mmod-item{
+  display:flex;flex-direction:column;align-items:center;padding:10px 4px;
+  border-radius:12px;cursor:pointer;transition:all .2s;border:1.5px solid transparent;position:relative;
+}
+.mmod-item.selected{border-color:var(--pri);background:var(--priL)}
+.mmod-icon{width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:5px}
+.mmod-name{font-size:10px;color:var(--t2);font-weight:600;text-align:center}
+.mmod-item.selected .mmod-name{color:var(--pri)}
+</style>
+</head>
+<body>
+
+<div class="pg-title">Inventia — Live Preview 📱</div>
+<p class="pg-sub">Interactive app preview · 5 screens · Tap the bottom tabs to navigate</p>
+
+<div class="phone">
+  <div class="dynamic-island"></div>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="st-time" id="st-time">9:41</span>
+    <div class="st-icons"><span>▪▪▪▪</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+
+  <!-- Screens -->
+  <div class="screens">
+
+    <!-- ══════ DASHBOARD ══════ -->
+    <div id="s-home" class="screen active">
+      <div class="dash-hdr">
+        <div>
+          <div class="logo-txt">Inventia 🔥</div>
+          <div class="role-txt">Produce Engineer</div>
+        </div>
+        <div class="hdr-actions">
+          <div class="icon-btn">🔔<div class="notif-dot"></div></div>
+          <div class="av-circ">H</div>
+        </div>
+      </div>
+      <div class="scontent">
+
+        <!-- Punch Card -->
+        <div class="card punch-card">
+          <div class="punch-srow">
+            <div class="status-pill" id="ci-pill" style="background:#FEF2F2">
+              <div style="width:6px;height:6px;border-radius:50%;background:#EF4444" id="ci-dot"></div>
+              <span style="color:#EF4444;font-size:11px;font-weight:700" id="ci-txt">Not Checked In</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:5px">
+              <div class="loc-row">📍<span>Mumbai, MO</span></div>
+              <div class="status-pill" style="background:#F0FDF4"><span style="color:#16A34A;font-size:11px;font-weight:700">Confirmed</span></div>
+            </div>
+          </div>
+          <div class="times-row">
+            <div class="time-col">
+              <div class="time-lbl">CHECK IN TIME</div>
+              <div class="time-val" id="ci-time">---:--</div>
+            </div>
+            <div class="time-div"></div>
+            <div class="time-col">
+              <div class="time-lbl">CHECK OUT TIME</div>
+              <div class="time-val" id="co-time">---:--</div>
+            </div>
+          </div>
+          <div class="tl-link">⏱ View Timeline</div>
+          <div class="punch-btns">
+            <button class="btn-punch" id="punch-btn" onclick="handlePunch()">↩ Punch In</button>
+            <button class="btn-qr">⬛ QR Code</button>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="qa-row">
+          <div class="qa-item"><div class="qa-icon" style="background:#EEF1FE">📁</div><div class="qa-lbl">Projects</div></div>
+          <div class="qa-item"><div class="qa-icon" style="background:#FAF5FF">📋</div><div class="qa-lbl">My Assignments</div></div>
+          <div class="qa-item"><div class="qa-icon" style="background:#F0FDF4">🧾</div><div class="qa-lbl">Payslip</div></div>
+          <div class="qa-item">
+            <div class="qa-icon" style="background:#FFFBEB">✅<div class="qa-badge">3</div></div>
+            <div class="qa-lbl">Approvals</div>
+          </div>
+        </div>
+
+        <!-- Leave + Events -->
+        <div class="two-col">
+          <div class="card half-card">
+            <div class="rh"><div style="font-size:12px;font-weight:800;color:var(--t1)">Leave Balance</div><div class="view-all">View All</div></div>
+            <div class="leave-row"><div class="leave-dot" style="background:#4A6CF7"></div><div class="leave-info"><div class="leave-type">Annual Leave</div><div class="bar-track"><div class="bar-fill" style="width:24%;background:#4A6CF7"></div></div></div><div class="leave-cnt">5/21</div></div>
+            <div class="leave-row"><div class="leave-dot" style="background:#22C55E"></div><div class="leave-info"><div class="leave-type">Sick Leave</div><div class="bar-track"><div class="bar-fill" style="width:20%;background:#22C55E"></div></div></div><div class="leave-cnt">2/10</div></div>
+            <div class="leave-row"><div class="leave-dot" style="background:#F59E0B"></div><div class="leave-info"><div class="leave-type">Casual Leave</div><div class="bar-track"><div class="bar-fill" style="width:17%;background:#F59E0B"></div></div></div><div class="leave-cnt">1/6</div></div>
+          </div>
+          <div class="card half-card">
+            <div class="rh"><div style="font-size:12px;font-weight:800;color:var(--t1)">Upcoming Events</div><div class="view-all">View All</div></div>
+            <div class="event-row"><div class="ev-icon" style="background:#EEF1FE">👥</div><div><div class="ev-title">Client Meeting</div><div class="ev-time">10:00 AM · Today</div></div></div>
+            <div class="event-row"><div class="ev-icon" style="background:#FAF5FF">🎨</div><div><div class="ev-title">Design Review</div><div class="ev-time">2:00 PM · Today</div></div></div>
+          </div>
+        </div>
+
+        <!-- View Toggle -->
+        <div class="view-toggle">
+          <button class="view-tab active" onclick="toggleView(this)">My View</button>
+          <button class="view-tab" onclick="toggleView(this)">Project View</button>
+        </div>
+
+        <!-- My Summary -->
+        <div class="card" style="padding:14px">
+          <div class="section-title">My Summary</div>
+          <div class="sum-row">
+            <div class="sum-item"><div class="sum-val" style="color:#4A6CF7">5</div><div class="sum-chg">+4 since</div><div class="sum-lbl">Tasks</div></div>
+            <div class="sum-item"><div class="sum-val" style="color:#EF4444">2</div><div class="sum-lbl">Meeting</div></div>
+            <div class="sum-item"><div class="sum-val" style="color:#EF4444">4</div><div class="sum-chg">+1 As now</div><div class="sum-lbl">Overdue</div></div>
+            <div class="sum-item"><div class="sum-val" style="color:#22C55E">1</div><div class="sum-chg">HR this wk</div><div class="sum-lbl">HR Task</div></div>
+          </div>
+        </div>
+
+        <!-- Today's Focus -->
+        <div class="card" style="padding:14px">
+          <div class="section-title">Today's Focus</div>
+          <div class="focus-grid">
+            <div class="focus-item">
+              <div class="focus-hdr"><div class="focus-icon" style="background:#EEF1FE">📅</div><div class="focus-ttl">Now Today</div></div>
+              <div class="focus-val" style="color:#4A6CF7">6</div>
+              <div style="height:4px;background:var(--bd);border-radius:2px;margin:4px 0"><div style="height:4px;width:60%;background:#4A6CF7;border-radius:2px"></div></div>
+              <div class="focus-lbl">A high prior By</div>
+            </div>
+            <div class="focus-item">
+              <div class="focus-hdr"><div class="focus-icon" style="background:#FEF2F2">⚠️</div><div class="focus-ttl">Overdue</div></div>
+              <div class="focus-val" style="color:#EF4444">+2</div>
+              <div class="focus-lbl">+2 since yesterday</div>
+              <div style="font-size:11px;color:#EF4444;font-weight:700;margin-top:4px;cursor:pointer">Review now</div>
+            </div>
+            <div class="focus-item">
+              <div class="focus-hdr"><div class="focus-icon" style="background:#F0FDF4">✅</div><div class="focus-ttl">Completed</div></div>
+              <div style="width:44px;height:44px;border-radius:50%;border:4px solid #22C55E;display:flex;align-items:center;justify-content:center;margin:4px auto 4px">
+                <span style="font-size:11px;font-weight:800;color:#22C55E">20%</span>
+              </div>
+              <div class="focus-lbl">This week</div>
+            </div>
+            <div class="focus-item">
+              <div class="focus-hdr"><div class="focus-icon" style="background:#FFFBEB">📊</div><div class="focus-ttl">Productivity</div></div>
+              <div class="focus-val" style="color:#F59E0B">4.2</div>
+              <div class="stars">★★★★★</div>
+              <div style="font-size:10px;color:var(--t3)">28 pts · <span style="color:#22C55E;font-weight:700">High</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekly Performance -->
+        <div class="card" style="padding:14px">
+          <div class="rh">
+            <div class="section-title" style="margin-bottom:0">My Productivity</div>
+            <div style="display:flex;align-items:center;gap:3px;background:#EEF1FE;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:11px;color:#4A6CF7;font-weight:600">Weekly performance ▾</div>
+          </div>
+          <div style="margin-top:10px">
+            <div class="prod-stats">
+              <div style="text-align:center"><div class="ps-lbl">SPEED LEVEL</div><div class="ps-val">4.2</div></div>
+              <div style="text-align:center"><div class="ps-lbl">DONE RATE</div><div class="ps-val">71%</div></div>
+              <div style="text-align:center"><div class="ps-lbl">VELOCITY</div><div class="ps-val">38</div></div>
+            </div>
+            <div class="perf-row"><div class="perf-day">Mon</div><div class="perf-track"><div class="perf-fill" style="width:95%;background:#4A6CF7"></div></div><div class="perf-score">95</div></div>
+            <div class="perf-row"><div class="perf-day">Tue</div><div class="perf-track"><div class="perf-fill" style="width:60%;background:#EF4444"></div></div><div class="perf-score">60</div></div>
+            <div class="perf-row"><div class="perf-day">Wed</div><div class="perf-track"><div class="perf-fill" style="width:75%;background:#F59E0B"></div></div><div class="perf-score">75</div></div>
+            <div class="perf-row"><div class="perf-day">Thu</div><div class="perf-track"><div class="perf-fill" style="width:85%;background:#22C55E"></div></div><div class="perf-score">85</div></div>
+            <div class="perf-row"><div class="perf-day">Fri</div><div class="perf-track"><div class="perf-fill" style="width:90%;background:#4A6CF7"></div></div><div class="perf-score">90</div></div>
+          </div>
+        </div>
+
+        <!-- Priority Breakdown -->
+        <div class="card" style="padding:14px">
+          <div class="section-title">My Productivity</div>
+          <div style="font-size:11px;color:var(--t3);margin:-4px 0 10px">Task priority distribution</div>
+          <div class="priority-row">
+            <svg width="90" height="90" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="28" fill="none" stroke="#E5E7EB" stroke-width="14"/>
+              <circle cx="40" cy="40" r="28" fill="none" stroke="#EF4444" stroke-width="14" stroke-dasharray="9 167" stroke-dashoffset="0" transform="rotate(-90 40 40)"/>
+              <circle cx="40" cy="40" r="28" fill="none" stroke="#F59E0B" stroke-width="14" stroke-dasharray="15 161" stroke-dashoffset="-9" transform="rotate(-90 40 40)"/>
+              <circle cx="40" cy="40" r="28" fill="none" stroke="#4A6CF7" stroke-width="14" stroke-dasharray="9 167" stroke-dashoffset="-24" transform="rotate(-90 40 40)"/>
+              <circle cx="40" cy="40" r="28" fill="none" stroke="#22C55E" stroke-width="14" stroke-dasharray="143 33" stroke-dashoffset="-33" transform="rotate(-90 40 40)"/>
+              <text x="40" y="44" text-anchor="middle" font-size="10" font-weight="800" fill="#111827" font-family="Inter,sans-serif">100%</text>
+            </svg>
+            <div class="pri-legend">
+              <div class="pri-item"><div class="pri-dot" style="background:#EF4444"></div><div class="pri-lbl">Critical</div><div class="pri-pct">2 (5%)</div></div>
+              <div class="pri-item"><div class="pri-dot" style="background:#F59E0B"></div><div class="pri-lbl">High</div><div class="pri-pct">3 (5%)</div></div>
+              <div class="pri-item"><div class="pri-dot" style="background:#4A6CF7"></div><div class="pri-lbl">Medium</div><div class="pri-pct">2 (5%)</div></div>
+              <div class="pri-item"><div class="pri-dot" style="background:#22C55E"></div><div class="pri-lbl">Low</div><div class="pri-pct">0 (0%)</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending Approvals -->
+        <div class="card" style="padding:14px">
+          <div class="rh">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="section-title" style="margin-bottom:0">Pending Approvals</div>
+              <div style="background:#EF4444;color:#fff;font-size:10px;font-weight:800;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center">3</div>
+            </div>
+            <div class="view-all">View all ›</div>
+          </div>
+          <div class="ap-row"><div class="ap-av" style="background:#8B5CF6">RV</div><div class="ap-info"><div class="ap-name">Rahul Verma</div><div class="ap-det">Leave · May 20-22</div></div><button class="ap-btn" style="border-color:#4A6CF7;color:#4A6CF7;background:#EEF1FE">Leave</button></div>
+          <div class="ap-row"><div class="ap-av" style="background:#22C55E">SP</div><div class="ap-info"><div class="ap-name">Sara Pati</div><div class="ap-det">Attendance · Regularization</div></div><button class="ap-btn" style="border-color:#22C55E;color:#22C55E;background:#F0FDF4">Attendance</button></div>
+          <div class="ap-row"><div class="ap-av" style="background:#F59E0B">VS</div><div class="ap-info"><div class="ap-name">Vijay Shetty</div><div class="ap-det">Expense · Submitted Apr 24</div></div><button class="ap-btn" style="border-color:#F59E0B;color:#F59E0B;background:#FFFBEB">Expense</button></div>
+        </div>
+
+        <!-- Announcements -->
+        <div class="card" style="padding:14px;margin-bottom:4px">
+          <div class="rh">
+            <div style="display:flex;align-items:center;gap:6px"><span>📢</span><div class="section-title" style="margin-bottom:0">Company Updates</div></div>
+            <div class="view-all">View all</div>
+          </div>
+          <div class="an-row"><div class="an-dot" style="background:#EF4444"></div><div><div class="an-title">Mandatory Safety Training — All Sites</div><div class="an-tag" style="background:#FEF2F2;color:#EF4444">Action required</div><div class="an-date">May 19 ago</div></div></div>
+          <div class="an-row"><div class="an-dot" style="background:#4A6CF7"></div><div><div class="an-title">New Leave Policy — Effective May 1</div><div class="an-date">May 19 ago</div></div></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════ MY WORK ══════ -->
+    <div id="s-work" class="screen">
+      <div class="asgn-hdr">
+        <h2>My Assignments</h2>
+        <div class="proj-dd">All Projects ▾</div>
+      </div>
+      <div class="toolbar">
+        <button class="view-btn active" onclick="toggleViewBtn(this)">☰ List View</button>
+        <button class="view-btn" onclick="toggleViewBtn(this)">⊞ Card View</button>
+      </div>
+      <div class="search-row">
+        <div class="search-box"><span>🔍</span><input type="text" placeholder="Search assignments..." oninput="filterAssignments(this.value)"></div>
+        <button class="filter-btn">⊟ Filters</button>
+      </div>
+      <div class="col-hdr"><span>ASSIGNMENT</span><span>DUE / STATUS</span></div>
+      <div id="asgn-list"></div>
+      <div class="stats-bar">
+        <div class="stitem"><div class="stval" style="color:#111827">58</div><div class="stlbl">Total</div></div>
+        <div class="stitem"><div class="stval" style="color:#4A6CF7">23</div><div class="stlbl">Ongoing</div></div>
+        <div class="stitem"><div class="stval" style="color:#F59E0B">42</div><div class="stlbl">Pending</div></div>
+        <div class="stitem"><div class="stval" style="color:#22C55E">19</div><div class="stlbl">Done</div></div>
+      </div>
+    </div>
+
+    <!-- ══════ ATTENDANCE ══════ -->
+    <div id="s-attend" class="screen">
+      <div class="att-hdr">
+        <div class="att-title">Attendance</div>
+        <div class="att-sub">Track your daily attendance</div>
+        <div class="att-tabs">
+          <div class="att-tab active" onclick="switchAttTab(this)">Calendar</div>
+          <div class="att-tab" onclick="switchAttTab(this)">Leave</div>
+        </div>
+      </div>
+      <div class="month-nav">
+        <button class="mnav-btn" onclick="changeMonth(-1)">‹</button>
+        <div class="month-ttl" id="month-ttl">May 2026</div>
+        <button class="mnav-btn" onclick="changeMonth(1)">›</button>
+      </div>
+      <div class="card cal-card" style="margin:0 14px">
+        <div class="cal-hdrs">
+          <div class="cal-dh">SUN</div><div class="cal-dh">MON</div><div class="cal-dh">TUE</div>
+          <div class="cal-dh">WED</div><div class="cal-dh">THU</div><div class="cal-dh">FRI</div><div class="cal-dh">SAT</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="legend">
+          <div class="leg-item"><div class="leg-dot" style="background:#4A6CF7"></div><div class="leg-lbl">Present</div></div>
+          <div class="leg-item"><div class="leg-dot" style="background:#F59E0B"></div><div class="leg-lbl">Late</div></div>
+          <div class="leg-item"><div class="leg-dot" style="background:#EF4444"></div><div class="leg-lbl">Absent</div></div>
+          <div class="leg-item"><div class="leg-dot" style="background:#22C55E"></div><div class="leg-lbl">Graced</div></div>
+          <div class="leg-item"><div class="leg-dot" style="background:#9CA3AF"></div><div class="leg-lbl">Off/Holiday</div></div>
+        </div>
+      </div>
+      <div class="sum-stat-row">
+        <div class="sum-stat-card"><div class="ssval" style="color:#4A6CF7">15</div><div class="sslbl">Present</div><div class="sschg">+7% vs last</div></div>
+        <div class="sum-stat-card"><div class="ssval" style="color:#8B5CF6">0</div><div class="sslbl">Leave</div><div class="sschg">-0% vs last</div></div>
+        <div class="sum-stat-card"><div class="ssval" style="color:#EF4444">4</div><div class="sslbl">Absent</div><div class="sschg">+10% vs last</div></div>
+        <div class="sum-stat-card"><div class="ssval" style="color:#F59E0B">2</div><div class="sslbl">Graced</div><div class="sschg">-20% vs last</div></div>
+      </div>
+      <div class="card hist-card">
+        <div class="hist-hdr"><div class="hist-ttl">Attendance History</div><span>▼</span></div>
+        <div id="hist-list"></div>
+      </div>
+      <div style="height:20px"></div>
+    </div>
+
+    <!-- ══════ PROJECTS ══════ -->
+    <div id="s-projects" class="screen">
+      <div class="proj-hdr">
+        <h2>Projects</h2>
+        <div class="hbtns">
+          <div class="srch-btn">🔍</div>
+          <button class="add-btn">+</button>
+        </div>
+      </div>
+      <div class="filter-scroll">
+        <button class="fchip active" onclick="filterProj(this,'All')">All</button>
+        <button class="fchip" onclick="filterProj(this,'Active')">Active</button>
+        <button class="fchip" onclick="filterProj(this,'Priority')">Priority</button>
+        <button class="fchip" onclick="filterProj(this,'Completed')">Completed</button>
+        <button class="fchip" onclick="filterProj(this,'Not Started')">Not Started</button>
+      </div>
+      <div class="stats-row2">
+        <div class="stat-bub"><div class="sb-icon" style="background:#EEF1FE">📁</div><div class="sb-val" style="color:#4A6CF7">6</div><div class="sb-lbl">Total</div></div>
+        <div class="stat-bub"><div class="sb-icon" style="background:#F0FDF4">▶</div><div class="sb-val" style="color:#22C55E">3</div><div class="sb-lbl">Active</div></div>
+        <div class="stat-bub"><div class="sb-icon" style="background:#F0FDFA">✓</div><div class="sb-val" style="color:#14B8A6">2</div><div class="sb-lbl">Done</div></div>
+        <div class="stat-bub"><div class="sb-icon" style="background:#FEF2F2">⚠</div><div class="sb-val" style="color:#EF4444">3</div><div class="sb-lbl">Overdue</div></div>
+      </div>
+      <div class="proj-list" id="proj-list"></div>
+    </div>
+
+    <!-- ══════ MORE ══════ -->
+    <div id="s-more" class="screen">
+      <div style="background:var(--surface);padding:12px 16px;border-bottom:1px solid var(--bd)">
+        <div style="font-size:18px;font-weight:800;color:var(--t1)">More</div>
+      </div>
+      <div class="more-content">
+        <div class="card prof-banner">
+          <div class="pav">H</div>
+          <div style="flex:1"><div class="pname">Harrsh</div><div class="prole">Produce Engineer</div></div>
+          <button class="edit-btn">✏️</button>
+        </div>
+        <div>
+          <div class="section-title">All Modules</div>
+          <div class="mod-grid" id="more-mods"></div>
+          <div class="card cust-row" style="margin-top:8px"><span>⊞</span><span class="cust-txt">Customize Modules</span><span style="color:var(--pri)">›</span></div>
+        </div>
+        <div>
+          <div class="section-title">Settings</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="card set-row"><div class="set-icon" style="background:#EEF1FE">🔔</div><div class="set-lbl">Notifications</div><div class="set-arr">›</div></div>
+            <div class="card set-row"><div class="set-icon" style="background:#FAF5FF">🔒</div><div class="set-lbl">Privacy</div><div class="set-arr">›</div></div>
+            <div class="card set-row"><div class="set-icon" style="background:#F0FDF4">❓</div><div class="set-lbl">Help & Support</div><div class="set-arr">›</div></div>
+            <div class="card set-row"><div class="set-icon" style="background:#FEF2F2">🚪</div><div class="set-lbl">Sign Out</div><div class="set-arr">›</div></div>
+          </div>
+        </div>
+        <div style="height:20px"></div>
+      </div>
+    </div>
+
+  </div><!-- /screens -->
+
+  <!-- Bottom Nav -->
+  <div class="bnav">
+    <button class="ni active" id="ni-home" onclick="goTab('home')"><div class="ni-icon">🏠</div><div class="ni-label">Home</div></button>
+    <button class="ni" id="ni-work" onclick="goTab('work')"><div class="ni-icon">💼</div><div class="ni-label">My Work</div></button>
+    <button class="ni" id="ni-attend" onclick="goTab('attend')"><div class="ni-icon">📅</div><div class="ni-label">Attend</div><div class="ni-badge">1</div></button>
+    <button class="ni" id="ni-projects" onclick="goTab('projects')"><div class="ni-icon">📁</div><div class="ni-label">Projects</div></button>
+    <button class="ni" id="ni-more" onclick="goTab('more')"><div class="ni-icon">⋯</div><div class="ni-label">More</div></button>
+  </div>
+</div>
+
+<!-- Modules Modal -->
+<div class="modal-ov" id="mod-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-sheet">
+    <div class="sh-handle"></div>
+    <div class="sh-hdr"><div class="sh-title">All Modules</div><div class="close-btn" onclick="closeModal()">✕</div></div>
+    <div class="modal-mod-grid" id="modal-mods"></div>
+    <div class="cust-row"><span>⊞</span><span class="cust-txt">Customize Modules</span><span style="color:var(--pri)">›</span></div>
+  </div>
+</div>
+
+<script>
+// ── Data ─────────────────────────────────────────────────────────────────────
+const ASGNS=[
+  {title:'Requirement Gathering',parent:'HR Orbit',type:'Subtask',status:'Not Started',date:'1 May'},
+  {title:'HR orbit',parent:'Requirement Gathering',type:'Task',status:'Ongoing',date:'20 Jun'},
+  {title:'Leave and absence',parent:'Requirement Gathering',type:'Subtask',status:'Ongoing',date:'19 Apr'},
+  {title:'Final submission',parent:'HR Orbit - Work list',type:'Subtask',status:'Completed',date:'19 Apr'},
+  {title:'Accommodate Changes',parent:'Final submission - Work list',type:'Subtask',status:'Ongoing',date:'8 Jun'},
+  {title:'Review',parent:'Accommodate Changes',type:'Subtask',status:'Ongoing',date:'4 Jun'},
+  {title:'Productivity orbit',parent:'Requirement Gathering',type:'Subtask',status:'Not Started',date:'20 Jun'},
+  {title:'Attendance',parent:'Productivity orbit - Req',type:'Subtask',status:'Not Started',date:'19 Apr'},
+  {title:'Final submission',parent:'Attendance - Productivity orbit',type:'Subtask',status:'Not Started',date:'19 Jun'},
+  {title:'Accommodate Changes',parent:'Final submission',type:'Subtask',status:'Not Started',date:'8 Jun'},
+  {title:'Review',parent:'Accommodate Changes',type:'Subtask',status:'Ongoing',date:'4 Jun'},
+  {title:'Project planning and management',parent:'Productivity orbit',type:'Subtask',status:'Completed',date:'19 Jun'},
+  {title:'Accommodate Changes',parent:'Project planning',type:'Subtask',status:'Not Started',date:'8 Jun'},
+  {title:'Final submission',parent:'Accommodate Changes',type:'Subtask',status:'Completed',date:'19 Jun'},
+  {title:'Activity orbit',parent:'Requirement Gathering',type:'Task',status:'Completed',date:'22 Jun'},
+  {title:'Cost center',parent:'Activity orbit - Req',type:'Subtask',status:'Ongoing',date:'10 Jun'},
+  {title:'Final submission',parent:'Cost center - Activity orbit',type:'Subtask',status:'Ongoing',date:'10 Jun'},
+  {title:'Accommodate Changes',parent:'Final submission',type:'Subtask',status:'Completed',date:'8 Jun'},
+  {title:'Tower schedule',parent:'Activity orbit',type:'Subtask',status:'Overdue',date:'19 Apr'},
+];
+
+const PROJS=[
+  {name:'Office Relocation Project',status:'Active',range:'Jan 19 - Feb 24, 2025',pct:68,members:['H','R','S','V'],colors:['#4A6CF7','#8B5CF6','#22C55E','#F59E0B']},
+  {name:'HR Orbit Development',status:'Priority',range:'Dec 18 - Feb 24, 2025',pct:100,members:['H','R','P'],colors:['#4A6CF7','#8B5CF6','#EC4899']},
+  {name:'Productivity Suite',status:'Active',range:'Mar 15 - May 30, 2025',pct:45,members:['H','S','V','A'],colors:['#4A6CF7','#22C55E','#F59E0B','#14B8A6']},
+  {name:'Activity Orbit Platform',status:'Active',range:'Apr 1 - Jun 15, 2025',pct:30,members:['R','V','P'],colors:['#8B5CF6','#F59E0B','#EC4899']},
+];
+
+const MODS=[
+  {name:'Approvals',icon:'✅',bg:'#FAF5FF'},{name:'Projects',icon:'📁',bg:'#EEF1FE'},
+  {name:'Documents',icon:'📄',bg:'#F3F4F6'},{name:'Shifts',icon:'📅',bg:'#FFFBEB'},
+  {name:'Timesheet',icon:'⏱',bg:'#FEF2F2'},{name:'Payroll',icon:'💰',bg:'#F0FDF4'},
+  {name:'Travel',icon:'✈️',bg:'#EFF6FF'},{name:'Performance',icon:'📈',bg:'#FAF5FF'},
+  {name:'Communicate',icon:'💬',bg:'#FFF7ED'},{name:'Directory',icon:'👥',bg:'#F0FDFA'},
+  {name:'Manager Hub',icon:'💼',bg:'#EEF2FF'},{name:'My Wallet',icon:'👛',bg:'#FDF2F8'},
+  {name:'Skills',icon:'🎯',bg:'#FAF5FF'},{name:'Wellness',icon:'❤️',bg:'#FEF2F2'},
+  {name:'Analytics',icon:'📊',bg:'#EEF1FE'},{name:'Profile',icon:'👤',bg:'#F3F4F6'},
+];
+
+const HIST=[
+  {day:'Mon 19',month:'May',ci:'08:30 am',co:'06:05 pm',s:'Present',sc:'#16A34A',sb:'#F0FDF4'},
+  {day:'Sun 18',month:'May',ci:null,co:null,s:'Off',sc:'#6B7280',sb:'#F3F4F6'},
+  {day:'Sat 17',month:'May',ci:null,co:null,s:'Off',sc:'#6B7280',sb:'#F3F4F6'},
+  {day:'Fri 16',month:'May',ci:'08:30 am',co:'06:13 pm',s:'Present',sc:'#16A34A',sb:'#F0FDF4'},
+  {day:'Thu 15',month:'May',ci:'08:30 am',co:'06:18 pm',s:'Present',sc:'#16A34A',sb:'#F0FDF4'},
+  {day:'Wed 14',month:'May',ci:'07:27 pm',co:'10:37 pm',s:'Half Day',sc:'#C2410C',sb:'#FFF7ED'},
+  {day:'Tue 13',month:'May',ci:'08:30 am',co:'06:05 pm',s:'Present',sc:'#16A34A',sb:'#F0FDF4'},
+  {day:'Mon 12',month:'May',ci:'08:30 am',co:'06:05 pm',s:'Present',sc:'#16A34A',sb:'#F0FDF4'},
+  {day:'Sun 11',month:'May',ci:null,co:null,s:'Off',sc:'#6B7280',sb:'#F3F4F6'},
+  {day:'Sat 10',month:'May',ci:null,co:null,s:'Off',sc:'#6B7280',sb:'#F3F4F6'},
+  {day:'Fri 9',month:'May',ci:'08:30 am',co:'06:05 pm',s:'Present',sc:'#16A34A',sb:'#F0FDF4'},
+];
+
+const DOT_MAP={1:'Present',2:'Off',3:'Off',4:'Absent',5:'Late',6:'Present',7:'Present',8:'Present',9:'Present',10:'Off',11:'Off',12:'Present',13:'Present',14:'Half Day',15:'Present',16:'Present',17:'Off',18:'Off',19:'Present'};
+const DOT_CLR={Present:'#4A6CF7',Late:'#F59E0B',Absent:'#EF4444','Half Day':'#F97316',Off:'#9CA3AF',Graced:'#22C55E'};
+const ST_CLR={'Not Started':{bg:'#F3F4F6',c:'#6B7280',d:'#9CA3AF'},Ongoing:{bg:'#EEF1FE',c:'#4A6CF7',d:'#4A6CF7'},Completed:{bg:'#F0FDF4',c:'#16A34A',d:'#22C55E'},Overdue:{bg:'#FEF2F2',c:'#DC2626',d:'#EF4444'}};
+const PROJ_ST={Active:{bg:'#EEF1FE',c:'#4A6CF7',d:'#4A6CF7'},Priority:{bg:'#FAF5FF',c:'#7C3AED',d:'#8B5CF6'},Completed:{bg:'#F0FDF4',c:'#16A34A',d:'#22C55E'},'Not Started':{bg:'#F3F4F6',c:'#6B7280',d:'#9CA3AF'}};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let punched=false,calY=2026,calM=4,selMod='Projects';
+
+// ── Punch In/Out ──────────────────────────────────────────────────────────────
+function handlePunch(){
+  const btn=document.getElementById('punch-btn');
+  const now=new Date();
+  const hm=`${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+  if(!punched){
+    punched=true;
+    document.getElementById('ci-time').textContent=hm;
+    btn.textContent='↪ Punch Out'; btn.classList.add('out');
+    document.getElementById('ci-pill').style.background='#F0FDF4';
+    document.getElementById('ci-dot').style.background='#22C55E';
+    document.getElementById('ci-txt').textContent='Checked In';
+    document.getElementById('ci-txt').style.color='#16A34A';
+  } else {
+    document.getElementById('co-time').textContent=hm;
+    btn.textContent='✓ Day Complete'; btn.disabled=true; btn.style.background='#9CA3AF';
+  }
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function goTab(t){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  document.getElementById('s-'+t).classList.add('active');
+  document.getElementById('ni-'+t).classList.add('active');
+  if(t==='projects')document.getElementById('s-'+t).scrollTop=0;
+}
+function toggleView(el){el.parentElement.querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active')}
+function toggleViewBtn(el){el.parentElement.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active')}
+function switchAttTab(el){document.querySelectorAll('.att-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active')}
+
+// ── Assignments ───────────────────────────────────────────────────────────────
+function buildAssignments(q=''){
+  const list=document.getElementById('asgn-list');
+  const shown=ASGNS.filter(a=>a.title.toLowerCase().includes(q.toLowerCase())||a.parent.toLowerCase().includes(q.toLowerCase()));
+  const TYPE={Subtask:{bg:'#EEF1FE',c:'#4A6CF7'},Task:{bg:'#F0FDF4',c:'#16A34A'}};
+  list.innerHTML=shown.map(a=>{
+    const ts=TYPE[a.type]||TYPE.Task;
+    const ss=ST_CLR[a.status]||ST_CLR['Not Started'];
+    return`<div class="asgn-row"><div class="al">
+      <span class="type-pill" style="background:${ts.bg};color:${ts.c}">${a.type}</span>
+      <div class="asgn-title">${a.title}</div>
+      <div class="asgn-parent">${a.parent}</div>
+    </div><div class="ar">
+      <div class="asgn-date">${a.date}</div>
+      <div class="badge-pill" style="background:${ss.bg}"><div class="bdot" style="background:${ss.d}"></div><span style="color:${ss.c};font-size:11px;font-weight:600">${a.status}</span></div>
+    </div></div>`;
+  }).join('');
+}
+function filterAssignments(q){buildAssignments(q)}
+
+// ── Calendar ──────────────────────────────────────────────────────────────────
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function buildCalendar(y,m){
+  document.getElementById('month-ttl').textContent=`${MONTHS[m]} ${y}`;
+  const fd=new Date(y,m,1).getDay();
+  const dim=new Date(y,m+1,0).getDate();
+  const todayD={y:2026,m:4,d:19};
+  const grid=document.getElementById('cal-grid');
+  let html='';
+  for(let i=0;i<fd;i++)html+=`<div class="cal-cell"></div>`;
+  for(let d=1;d<=dim;d++){
+    const isT=(y===todayD.y&&m===todayD.m&&d===todayD.d);
+    const st=(y===2026&&m===4)?DOT_MAP[d]:null;
+    const dc=st?DOT_CLR[st]:'transparent';
+    html+=`<div class="cal-cell"><div class="cal-day${isT?' today':''}">${d}</div><div class="cal-dot" style="background:${dc}"></div></div>`;
+  }
+  grid.innerHTML=html;
+}
+function changeMonth(dir){
+  calM+=dir;
+  if(calM<0){calM=11;calY--;}
+  if(calM>11){calM=0;calY++;}
+  buildCalendar(calY,calM);
+}
+
+// ── History ───────────────────────────────────────────────────────────────────
+function buildHistory(){
+  document.getElementById('hist-list').innerHTML=HIST.map(h=>`
+    <div class="hist-row">
+      <div class="hdate"><div class="hday">${h.day}</div><div class="hmonth">${h.month}</div></div>
+      <div class="htimes">${h.ci?`
+        <div class="htr"><span class="htlbl">↑ Check In</span><span class="htval">${h.ci}</span></div>
+        <div class="htr"><span class="htlbl">↓ Check Out</span><span class="htval">${h.co||'---'}</span></div>
+      `:'<div class="htr"><span class="htlbl">— Check In  — Check Out</span></div>'}</div>
+      <div class="hstatus">
+        <div class="badge-pill" style="background:${h.sb}"><div class="bdot" style="background:${h.sc}"></div><span style="color:${h.sc};font-size:10px;font-weight:600">${h.s}</span></div>
+        ${h.ci?'<span style="font-size:13px;color:#4A6CF7;cursor:pointer">📋</span>':''}
+      </div>
+    </div>`).join('');
+}
+
+// ── Projects ──────────────────────────────────────────────────────────────────
+function buildProjects(filter='All'){
+  const shown=filter==='All'?PROJS:PROJS.filter(p=>p.status===filter);
+  document.getElementById('proj-list').innerHTML=shown.map(p=>{
+    const ss=PROJ_ST[p.status]||PROJ_ST.Active;
+    const pc=p.pct===100?'#22C55E':p.pct>60?'#4A6CF7':'#F59E0B';
+    const avs=p.members.map((m,i)=>`<div class="avsm" style="background:${p.colors[i]}">${m}</div>`).join('');
+    return`<div class="card proj-card">
+      <div class="pc-top">
+        <div class="pc-ta">
+          <div class="pc-name">${p.name}</div>
+          <div class="badge-pill" style="background:${ss.bg}"><div class="bdot" style="background:${ss.d}"></div><span style="color:${ss.c};font-size:11px;font-weight:600">${p.status}</span></div>
+        </div>
+        <span style="font-size:16px;color:#9CA3AF;cursor:pointer">⋮</span>
+      </div>
+      <div class="pc-info">
+        <div class="pci">👥 <span>${p.members.length} Total projects</span></div>
+        <div class="pci">📅 <span>${p.range}</span></div>
+      </div>
+      <div class="pc-bot">
+        <div class="av-grp">${avs}</div>
+        <div class="pc-prog">
+          <div class="pc-pct">${p.pct}%</div>
+          <div class="pc-track"><div class="pc-fill" style="width:${p.pct}%;background:${pc}"></div></div>
+        </div>
+      </div>
+      <div class="show-more">Show more projects ▾</div>
+    </div>`;
+  }).join('');
+}
+function filterProj(btn,f){
+  document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');buildProjects(f);
+}
+
+// ── Modules ───────────────────────────────────────────────────────────────────
+function buildMoreMods(){
+  document.getElementById('more-mods').innerHTML=MODS.map(m=>`
+    <div class="mod-item">
+      <div class="mod-icon" style="background:${m.bg}">${m.icon}</div>
+      <div class="mod-name">${m.name}</div>
+    </div>`).join('');
+}
+function buildModalMods(){
+  document.getElementById('modal-mods').innerHTML=MODS.map(m=>`
+    <div class="mmod-item${m.name===selMod?' selected':''}" onclick="selectMod(this,'${m.name}')">
+      <div class="mmod-icon" style="background:${m.bg}">${m.icon}</div>
+      <div class="mmod-name">${m.name}</div>
+    </div>`).join('');
+}
+function selectMod(el,n){
+  selMod=n;
+  document.querySelectorAll('.mmod-item').forEach(i=>i.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function closeModal(){document.getElementById('mod-modal').classList.remove('show')}
+
+// ── Clock ─────────────────────────────────────────────────────────────────────
+function updateClock(){
+  const n=new Date();
+  const h=n.getHours()%12||12;
+  const m=n.getMinutes().toString().padStart(2,'0');
+  document.getElementById('st-time').textContent=`${h}:${m}`;
+}
+updateClock();setInterval(updateClock,10000);
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+buildCalendar(calY,calM);
+buildAssignments();
+buildHistory();
+buildProjects();
+buildMoreMods();
+buildModalMods();
+</script>
+</body>
+</html>
